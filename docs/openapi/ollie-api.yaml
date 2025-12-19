@@ -1,0 +1,303 @@
+openapi: 3.0.3
+info:
+  title: Ollie API
+  description: |
+    HTTP API Documentation for Ollie endpoints.
+    
+    This API includes:
+    - N8N workflow endpoints
+    - Custom webhooks
+    - Additional custom targets
+    
+    ## Authentication
+    Most endpoints require authentication. Include your API key in the request headers.
+    
+    ## Base URL
+    All endpoints are relative to: `https://your-domain.com/api`
+    
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@example.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://your-domain.com/api
+    description: Production server
+  - url: https://staging.your-domain.com/api
+    description: Staging server
+  - url: http://localhost:3000/api
+    description: Development server
+
+tags:
+  - name: N8N Workflows
+    description: Endpoints for N8N workflow webhooks
+  - name: Custom Webhooks
+    description: Custom webhook endpoints
+  - name: Health
+    description: Health check and monitoring endpoints
+
+security:
+  - ApiKeyAuth: []
+
+paths:
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Health check endpoint
+      description: Returns the health status of the API
+      operationId: getHealth
+      security: []
+      responses:
+        '200':
+          description: API is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  timestamp:
+                    type: string
+                    format: date-time
+                    example: '2024-01-15T10:30:00Z'
+                  version:
+                    type: string
+                    example: '1.0.0'
+
+  /webhooks/n8n/{workflowId}:
+    post:
+      tags:
+        - N8N Workflows
+      summary: Trigger N8N workflow
+      description: Triggers an N8N workflow by its workflow ID
+      operationId: triggerN8nWorkflow
+      parameters:
+        - name: workflowId
+          in: path
+          required: true
+          description: The unique identifier of the N8N workflow
+          schema:
+            type: string
+            example: workflow-123
+      requestBody:
+        required: true
+        description: Payload to send to the N8N workflow
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                event:
+                  type: string
+                  description: Event type that triggered the workflow
+                  example: user.created
+                data:
+                  type: object
+                  description: Event data
+                  example:
+                    userId: user-456
+                    email: user@example.com
+                    timestamp: '2024-01-15T10:30:00Z'
+      responses:
+        '200':
+          description: Workflow triggered successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  workflowId:
+                    type: string
+                    example: workflow-123
+                  executionId:
+                    type: string
+                    example: exec-789
+                  message:
+                    type: string
+                    example: Workflow triggered successfully
+        '400':
+          description: Bad request - invalid payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized - invalid or missing API key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Workflow not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /webhooks/custom/{hookId}:
+    post:
+      tags:
+        - Custom Webhooks
+      summary: Trigger custom webhook
+      description: Triggers a custom webhook by its hook ID
+      operationId: triggerCustomWebhook
+      parameters:
+        - name: hookId
+          in: path
+          required: true
+          description: The unique identifier of the custom webhook
+          schema:
+            type: string
+            example: hook-abc
+      requestBody:
+        required: true
+        description: Payload to send to the custom webhook
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+              description: Custom payload structure
+              example:
+                action: process
+                items:
+                  - id: item-1
+                    value: 100
+                  - id: item-2
+                    value: 200
+      responses:
+        '200':
+          description: Webhook processed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  hookId:
+                    type: string
+                    example: hook-abc
+                  processedAt:
+                    type: string
+                    format: date-time
+                    example: '2024-01-15T10:30:00Z'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Webhook not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /webhooks/custom/{hookId}/status:
+    get:
+      tags:
+        - Custom Webhooks
+      summary: Get webhook status
+      description: Returns the current status of a custom webhook
+      operationId: getWebhookStatus
+      parameters:
+        - name: hookId
+          in: path
+          required: true
+          description: The unique identifier of the custom webhook
+          schema:
+            type: string
+            example: hook-abc
+      responses:
+        '200':
+          description: Webhook status retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  hookId:
+                    type: string
+                    example: hook-abc
+                  status:
+                    type: string
+                    enum: [active, inactive, error]
+                    example: active
+                  lastTriggered:
+                    type: string
+                    format: date-time
+                    example: '2024-01-15T10:30:00Z'
+                    nullable: true
+                  triggerCount:
+                    type: integer
+                    example: 42
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Webhook not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API key for authentication. Include this in the header of your requests.
+
+  schemas:
+    Error:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: Error type
+          example: ValidationError
+        message:
+          type: string
+          description: Error message
+          example: The provided payload is invalid
+        details:
+          type: object
+          description: Additional error details
+          additionalProperties: true

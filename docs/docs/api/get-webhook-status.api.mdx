@@ -1,0 +1,71 @@
+---
+id: get-webhook-status
+title: "Get webhook status"
+description: "Returns the current status of a custom webhook"
+sidebar_label: "Get webhook status"
+hide_title: true
+hide_table_of_contents: true
+api: eJztVktv4zYQ/ivE5NICsqVkU6DQqW52sTXa3QaJ0xaNDSwjjW1uKFJLDp11Df/3YigqfiRbZNFLD/XFkjiPb755cQMkFx7KW7gInmwjfse7pbX3HmYZ1Ogrp1pS1kAJV0jBGS9oiaIKzqEh4UlS8MLOhRRVZ+ChMwAZ2BadZOVxDSUskJLt66gEGbTSyQYJHQPYgJENQgksMq4hA8VeW0lLyMDhp6Ac1lCSC3gMbbJEEYz6FFCoGg2puULHqDqsR7h8tcRGQrkBWrfs0ZNTZgEZ4GfZtLoHMZB3FWy3M/buW2s8elY6Kwr+O0SQQusJcUhO4Qpr4UNVoffzoPUaMqisITTEBmTbalVFgvKPnq1snkKzdx+xIubKMZ2kOgyJoxeGkEEH61l5ExpOv6xIrTCy/viIzlnHhbAzms62GWjpaeLUYoExLU8tz61rJEEJtSQckGrwAN5ZcXY+KE4Hp99NTovyVVEWxZ+QgQlayzuW4ERvM6DOx4UNHW3JjTKEC3T7Js/PtvGXwXlx+jRFN0YGWlqn/sL632RiV4q3iaEMGvReLpC5OkxUJ/AMO4fY3rCYiDL7HP0mtaojrijAtPeeXmiyF9+3yt3SOrtSNdailWttZS2UF8qs2B97qZGk0v658A+9jOpa8aPUIoYqes0M5OPR5R4lMaucVkURTAospe38y51lLIm5Deb/3P0HcxeDo6VNgz7OdlpCCXkauz7vxnC+6UbXNvf9FvDoVv0KCE7z5CJqfZnnaxvcoLaNVGZY2SaXrXoSxKWzdaj4RXSGYJsd2/EkF8oshi+xd93JPm+szHNtK6mX1lP5qiiKZ028xhVq2zZxQSYzM46zCk7ROgY6atXPuB4FJul2tn98zcXbFeC+0GMyZfzYr8clyjpOwbQ8/xiMLseDTuAo25djcY9rMbdO8CDkNdn1zVCMTaVDjYKWsZTi2uws8xJl2gR3DnryQ+BkKzO3EVOqhF+1VihGl+Mnbn+aTC75QLy2VWBKosuIolNCU7dWGfLDqZmaCSNgcdVB8uXUDMT779+LB+vu59o+7BT45OJgucdPe2WdVj9Jt0CWn5qTEzE6CH5q3llPO6MijYgvchTZ6MlMXCVyEmddJCcn4kfpUdxc/TI1I633XEjHKlryKhVkS/HhHyr+w9RABtwhHaGnw2JYpBkoqzgDU+4Z1HVoW+u4AbGRiuvWd19+SDOEzcb1rSo0HvfU340nkB11jm3ReBtchUPrFnlS8jnLch201lMjzZ6Vt0h9NsRjix+UxGY3vr/+TpmagPAz5a2WynAsEfMmjZxb6IuBSYr6kEH5eKtMoGYZcBez/GZzJz3eOL3d8udPAR036SyDlXSqu4zcbqBWnp9rKOdS++M76H5U31ylNfOt+Lqb6bPR9X1vuKdXUgd+gwzucb27LW9n26wfBgy2OxxVFba0p/ZkW/LkeZzcb99wVv8GbI81sg==
+sidebar_class_name: "get api-method"
+info_path: docs/api/ollie-api
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Get webhook status"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"get"}
+  path={"/webhooks/custom/{hookId}/status"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Returns the current status of a custom webhook
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+  children={"Request"}
+>
+</Heading>
+
+<ParamsDetails
+  parameters={[{"name":"hookId","in":"path","required":true,"description":"The unique identifier of the custom webhook","schema":{"type":"string","example":"hook-abc"}}]}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  title={"Body"}
+  body={undefined}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  id={undefined}
+  label={undefined}
+  responses={{"200":{"description":"Webhook status retrieved successfully","content":{"application/json":{"schema":{"type":"object","properties":{"hookId":{"type":"string","example":"hook-abc"},"status":{"type":"string","enum":["active","inactive","error"],"example":"active"},"lastTriggered":{"type":"string","format":"date-time","example":"2024-01-15T10:30:00Z","nullable":true},"triggerCount":{"type":"integer","example":42}}}}}},"401":{"description":"Unauthorized","content":{"application/json":{"schema":{"type":"object","required":["error","message"],"properties":{"error":{"type":"string","description":"Error type","example":"ValidationError"},"message":{"type":"string","description":"Error message","example":"The provided payload is invalid"},"details":{"type":"object","description":"Additional error details","additionalProperties":true}},"title":"Error"}}}},"404":{"description":"Webhook not found","content":{"application/json":{"schema":{"type":"object","required":["error","message"],"properties":{"error":{"type":"string","description":"Error type","example":"ValidationError"},"message":{"type":"string","description":"Error message","example":"The provided payload is invalid"},"details":{"type":"object","description":"Additional error details","additionalProperties":true}},"title":"Error"}}}}}}
+>
+  
+</StatusCodes>
+
+
+      

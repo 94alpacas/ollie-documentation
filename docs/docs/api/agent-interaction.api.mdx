@@ -1,0 +1,71 @@
+---
+id: agent-interaction
+title: "Main Interaction"
+description: "Acts as the primary entry point for all agent interactions. This includes responses from user intercations or other events that may be multi-step with the exception of explicit Human-in-the-loop interactions."
+sidebar_label: "Main Interaction"
+hide_title: true
+hide_table_of_contents: true
+api: eJzdV1Fv2zYQ/isH5lVy7DTtEr1s6VKgxtbWaNNtQGKsZ+lssaFIlaTsCK7/+3CUFMtxmmTInuaHxBaPx4/33X13WguPCyeSS/H+5D38aez1XJmVE9NIZORSK0svjRaJOEu9A3Tgc4LSygJtDaS9raE0UnuYGwuoFOCCtAepPVlMea8bwEUuHUidqiojB5ZcabQjB3NrCqgc2cY+xWAPxoLxOVmgJWnPR6KHAmuYERSV8jJ2nkpYSZ8HOHSTUoAJZg50UyqZSg9vqwJ1LHXsc4qVMeUuKBEJU5INR44zkYgAfLw1EZGw9K0i51+brBbJOvyUljKReFvR3QBNsFYGM/AGHOnwn8FxWFdtWEUkUqM9ac/usGSkAcDhV8c+1sKlORXI33xdkkiEmX2l1ItIlJbhekmOV6lAqXpmzlupF+IupjdsBphllpzj6DAiDriIBN1gUSrezA9+aX8OUlOIzQ7Oh4+4aD1CQc7hgnY8nxuoTQWWUlMUHBTUnC/Ou5AvAU2ZmkLqBeRGyQxrcITO6J8ZRKnQz40t/pbZ04B0G2B83scxOnpx/PLVTyenw57Tf+kxmPbvJrXzuLAYwoWVz4dPhnnG1jA+/yEjwd33LWw+wpFz0ugnH9Law/h8AOM5aOOhtGYpM8qicGpXh7CSSgETjlID9jY2ledyU6mMi8/SnCzplDKQGlw1c1wg2kOKSnWUSse+lmRdSO3BzsXS02OaH89O4tHo1Yv4OH35Ip7NRqfxKR1TNqLRq5OjodiED5dfKxR84aPhkP/t3rPTK/BWLhZkKQNXpSk5N6+Uqv+7emu99gxnxihC3b8dq8ImEl0h3MPSNhCPIX8+4R3ZTFUrZNEOl76yultuAh01uruSjgBB06qfCyFLZgQL0iyblD2D2Zf3kRm0V6MCR3bJ6m+tsc+hcKvXl6Jz1pEz3VPUYPC4orLZvhj8gSxebBMMxMNpcJ/L++QzCFBHY9n2l9BKl3wen5KRR6ncfde/07+zTPJXVE1godsZCbxdmvRCErJ5EwkvfQDTXqwhsCCfG+6aLOZcLehzkYjDFc1yY64PQzON5U43bWjlWWMtKqtEInLvS5ccHqIqMcXh8HSAZTnQJ3qQKlNle3eYWJNVwV2bI2IzZb9pZaWvg+OzUv5GNQusSC6n/eVPnCcN132j27hheCgiIfmonDALoqyx4NW/4rPJOG4M7gR2MoZrqpsBqPI5ad+m6ADGzczTqKLUQXYbzyz9talsV5puIDiunNQft1PHmy4Vbjv+frPuFciz+u2ddrttPv2W2et6/aa337B25euJ6sCxn5vASZt0H5SSBGeT8V7Y315cTHgBzk1aFaR9CHm4ZrOJdBYmUze40lc6jKBs3o2hyZWOd4az7Qa2PzgIXXpL5pV+Z5zfGkGrLj/kPLDbJUfLfUt2mwMNsoMDeI2O4PPH36/0Z63CpHYrw86z1EZhtN6ejZZ9KfRySeBNAl8eKaUvV1yBXH5N9EaD4WDYpg6mQVvbRGfEn6qyNJbruss61zzZnRJ5mDLOF6h7+9/xELE7Ru8Qt+6l6//wnaIVE083/rBUKDVndVC7dSuSl6IVSa6gPZmcRiJnSU0uxXo9Q0efrdps+PG3iixr3DQSS7QSZ1wgl9NN1GkVy9811SIRvzYRji+aNrVEVTUKd6d7bqJux1nK133QdtpT/cmHTxciErP2xagwGe+xyG84/DcR4fUqRCW8OfGztVCoF1XoiaLxyZ9/AEXpDVs=
+sidebar_class_name: "post api-method"
+info_path: docs/api/ollie-api
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Main Interaction"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"post"}
+  path={"/webhook/agent-interaction"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Acts as the primary entry point for all agent interactions. This includes responses from user intercations or other events that may be multi-step with the exception of explicit Human-in-the-loop interactions.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+  children={"Request"}
+>
+</Heading>
+
+<ParamsDetails
+  parameters={undefined}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  title={"Body"}
+  body={{"required":true,"description":"Payload to send to the N8N workflow","content":{"application/json":{"schema":{"type":"object","properties":{"email":{"type":"string","description":"Email address of the user","example":"user@example.com"},"content":{"type":"string","description":"The user message","example":"Do you recommend any posts for the upcoming holiday season?"},"platform_id":{"type":"string","description":"The platform ID","example":1234567890},"platform":{"type":"string","description":"The platform type","example":"instagram"},"auth0_id":{"type":"string","description":"The Auth0 ID of the user","example":"auth0|1234567890"},"session_id":{"type":"string","description":"The session ID. If not provided, the response will contain a session ID that should be referenced in subsequent calls for this conversation.","example":"c94ef4b8-1163-4c53-bb19-9e4ed1e16820"}}}}}}}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  id={undefined}
+  label={undefined}
+  responses={{"200":{"description":"Workflow triggered successfully","content":{"application/json":{"schema":{"type":"object","properties":{"success":{"type":"boolean","example":true},"message":{"type":"string","example":"Workflow triggered successfully"},"session_id":{"type":"string","description":"The session ID. If provided in request, should be returned in response, otherwise a new session ID will be generated.","example":"c94ef4b8-1163-4c53-bb19-9e4ed1e16820"}}}}}},"500":{"description":"Internal server error","content":{"application/json":{"schema":{"type":"object","required":["error","message"],"properties":{"error":{"type":"string","description":"Error type","example":"ValidationError"},"message":{"type":"string","description":"Error message","example":"The provided payload is invalid"},"details":{"type":"object","description":"Additional error details","additionalProperties":true}},"title":"Error"}}}}}}
+>
+  
+</StatusCodes>
+
+
+      

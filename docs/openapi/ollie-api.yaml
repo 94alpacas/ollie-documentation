@@ -1,11 +1,5 @@
 # Ollie API OpenAPI Specification
-# 
-# NOTE: This is a sample/template specification with placeholder values.
-# Please update the following before deploying to production:
-# - Server URLs (lines 27-32): Replace 'your-domain.com' with actual domain
-# - Contact email (line 21): Replace 'support@example.com' with actual support email
-# - API descriptions and examples to match your actual endpoints
-#
+
 openapi: 3.0.3
 info:
   title: Ollie API
@@ -14,8 +8,6 @@ info:
     
     This API includes:
     - N8N workflow endpoints
-    - Custom webhooks
-    - Additional custom targets
     
     ## Authentication
     Most endpoints require authentication. Include your API key in the request headers.
@@ -27,9 +19,6 @@ info:
   contact:
     name: API Support
     email: support@example.com
-  license:
-    name: MIT
-    url: https://opensource.org/licenses/MIT
 
 servers:
   - url: https://alpaca009.app.n8n.cloud
@@ -51,7 +40,7 @@ paths:
     post:
       tags:
         - N8N Workflows
-      summary: Primary agent interaction endpoint
+      summary: Main Interaction
       description: Acts as the primary entry point for all agent interactions. This includes responses from user intercations or other events that may be multi-step with the exception of explicit Human-in-the-loop interactions.
       operationId: agentInteraction
       requestBody:
@@ -110,9 +99,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
-
-  
+                $ref: '#/components/schemas/Error'  
 components:
   securitySchemes:
     ApiKeyAuth:

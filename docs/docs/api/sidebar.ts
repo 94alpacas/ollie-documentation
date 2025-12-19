@@ -12,39 +12,9 @@ const sidebar: SidebarsConfig = {
       items: [
         {
           type: "doc",
-          id: "api/trigger-n-8-n-workflow",
-          label: "Trigger N8N workflow",
+          id: "api/agent-interaction",
+          label: "Main Interaction",
           className: "api-method post",
-        },
-      ],
-    },
-    {
-      type: "category",
-      label: "Custom Webhooks",
-      items: [
-        {
-          type: "doc",
-          id: "api/trigger-custom-webhook",
-          label: "Trigger custom webhook",
-          className: "api-method post",
-        },
-        {
-          type: "doc",
-          id: "api/get-webhook-status",
-          label: "Get webhook status",
-          className: "api-method get",
-        },
-      ],
-    },
-    {
-      type: "category",
-      label: "Health",
-      items: [
-        {
-          type: "doc",
-          id: "api/get-health",
-          label: "Health check endpoint",
-          className: "api-method get",
         },
       ],
     },

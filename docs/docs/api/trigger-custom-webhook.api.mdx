@@ -1,0 +1,71 @@
+---
+id: trigger-custom-webhook
+title: "Trigger custom webhook"
+description: "Triggers a custom webhook by its hook ID"
+sidebar_label: "Trigger custom webhook"
+hide_title: true
+hide_table_of_contents: true
+api: eJztV1tv2zYU/ivEycsGyLactsCgpzlpgRlbWyNxt2GxgdLisc2GIlWSSuoJ/u/DIelYjt2gRTGgD/WLZPFcv3NlC56vHBQ3cNk4byr2Fy7Wxtw6mGcg0JVW1l4aDQVMrVyt0DrGWRlp7yMtW2yY9I6F9/FLyMDUaDmxjQUU4CNjVJDkQwY1t7xCj5bUt6B5hVAAHY4FZCBJZ839GjKw+LGRFgUU3jZ4ZNgaWaPlxwaZFKi9XEq0zCyZX+MjUyEDV66x4lC04Dc1aXTeSr2CDPATr2q1M6LHFyVst/OoHZ2/MGJDbE8bM+EbZbhg3jCHOjxPmlEa7VF7EsjrWsky4DX44EhKe2ylWXzA0kMGXAhJpFxNLOHsJbrTpqSI1ski521T+sZi19UWeJnIa2tKdI6g91jFoEiKH/3tDSGDO64ahGKY59use3a+PzvP8+18Sz/CzdVGOzKvhfM8p8ehhSkZWFKNgrmmpLdlo9TmW1CqO9i0kKR2CBfGKOS6CwVBuM12CfiF+ZHBg+0jf4ppaWzFPRQguMeel9UB/HCenz/v5cPe8MV0mBfP8iLP/4FtAvD5KcwuuGApI78FoH0W3wBaayxkUKFzfIVU+of4RYIT3h2a9orIWKDp+vgnV1IEuwIBgbbT9IUid+RdqVT1tTV3UqB4yHHpmNR3pI+0CPRcKnfK/UMto4eaYsFVtuN8qtwoQl76YExyLEVteBy1d5o3fm2s/BfFj7B9n2F7/vkGpY1nS9PoH7H7LmP34lSjHGuPluQ7tHdo2Q7yH/H7zuIXnPNrQ/tEbcJYC3tfAYO0L7lB3J8GbZzOW9rjQlTjmtJYRVPZ+9oVg8HGNLYnTMWl7pemGvBaHpk/sUY0YfNJ6QG00hzKcZ6vpF71v0TedaQ9LawYDJQpuVob54tneZ6fFPES71CZukLtH8TMyc+ysdJvgqOjWv6Om1FD6NzMu8fXlLYx9bpED2Hk4eNur14jF0j5m7buv3ujybgXCR7FeTJmt7hhS2MZjTDar2PF9NlYl6oRyPw6JFFYdKNk2r4Jtt2m4vpAYaYau9pv06/+3y2UfF2agEHKubdKSWSjyfjIzd+m0wkdsJembCgEwcXgdWRCLWojtXf9mZ7pKXlM5DJC4IqZ7rE3v7xh98beLpW53zPQyeXB+h8+dQooXQ48tysk+pk+O2OjA7Bn+rVxfi+UpWb02ZgE9HfBS7FJwUgxip6cnbEL7pC9u/pjpkdKdVRwSyyKe3mHzJuCvX+iwt7PaJmmioyADvt5P0/dlpeh26ZcI6Oum7o2liodKy6pTlz88mvqViSW+pGSJWqHHfbX4ylkjyrV1KidaWyJfWNXg8TkBkRLeUddpeK6IyVdZo/vZQdp0e6Hxddcf1PJefzkB7XiUpMnweI2dbYb2KUCQRTEQQZFunvM6RbiPJG17YI7fGfVdkufPzZoqRPMKdWt5AtK65sWhHT0LqBYcuUe3wS7bvx0labYz+zr7s0nndo1F73ZFx9ABre42d/lQymmjkPGxsPLaFJvGmffjvloJFORR45RWWLtn6Sdd0bJ5O01ZcoiXdsrI4jH8nsa5fw+GmoCRKFthm8tKK5XTRi0EGXS7z/SFfjL
+sidebar_class_name: "post api-method"
+info_path: docs/api/ollie-api
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Trigger custom webhook"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"post"}
+  path={"/webhooks/custom/{hookId}"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Triggers a custom webhook by its hook ID
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+  children={"Request"}
+>
+</Heading>
+
+<ParamsDetails
+  parameters={[{"name":"hookId","in":"path","required":true,"description":"The unique identifier of the custom webhook","schema":{"type":"string","example":"hook-abc"}}]}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  title={"Body"}
+  body={{"required":true,"description":"Payload to send to the custom webhook","content":{"application/json":{"schema":{"type":"object","additionalProperties":true,"description":"Custom payload structure","example":{"action":"process","items":[{"id":"item-1","value":100},{"id":"item-2","value":200}]}}}}}}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  id={undefined}
+  label={undefined}
+  responses={{"200":{"description":"Webhook processed successfully","content":{"application/json":{"schema":{"type":"object","properties":{"success":{"type":"boolean","example":true},"hookId":{"type":"string","example":"hook-abc"},"processedAt":{"type":"string","format":"date-time","example":"2024-01-15T10:30:00Z"}}}}}},"400":{"description":"Bad request","content":{"application/json":{"schema":{"type":"object","required":["error","message"],"properties":{"error":{"type":"string","description":"Error type","example":"ValidationError"},"message":{"type":"string","description":"Error message","example":"The provided payload is invalid"},"details":{"type":"object","description":"Additional error details","additionalProperties":true}},"title":"Error"}}}},"401":{"description":"Unauthorized","content":{"application/json":{"schema":{"type":"object","required":["error","message"],"properties":{"error":{"type":"string","description":"Error type","example":"ValidationError"},"message":{"type":"string","description":"Error message","example":"The provided payload is invalid"},"details":{"type":"object","description":"Additional error details","additionalProperties":true}},"title":"Error"}}}},"404":{"description":"Webhook not found","content":{"application/json":{"schema":{"type":"object","required":["error","message"],"properties":{"error":{"type":"string","description":"Error type","example":"ValidationError"},"message":{"type":"string","description":"Error message","example":"The provided payload is invalid"},"details":{"type":"object","description":"Additional error details","additionalProperties":true}},"title":"Error"}}}},"500":{"description":"Internal server error","content":{"application/json":{"schema":{"type":"object","required":["error","message"],"properties":{"error":{"type":"string","description":"Error type","example":"ValidationError"},"message":{"type":"string","description":"Error message","example":"The provided payload is invalid"},"details":{"type":"object","description":"Additional error details","additionalProperties":true}},"title":"Error"}}}}}}
+>
+  
+</StatusCodes>
+
+
+      

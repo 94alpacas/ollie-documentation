@@ -1,0 +1,71 @@
+---
+id: trigger-n-8-n-workflow
+title: "Trigger N8N workflow"
+description: "Triggers an N8N workflow by its workflow ID"
+sidebar_label: "Trigger N8N workflow"
+hide_title: true
+hide_table_of_contents: true
+api: eJztWG1v4zYM/isC+2UDnMTpy9b509LrAQu26wVtug1rApxiM4musuST5PQyw/99oGw3zsvaFXcD7kPzIS8WSZHPQ1JUCnB8YSG6g6vzK/aHNvdzqR8sTANI0MZGZE5oBRGMjVgs0FjGFSPRh1qUzdZMOLv5PbyEAHSGhpPmMIEIXKV7da6aDSCAjBueokNDuxegeIoQQWNmmEAAgjbOuFtCAAY/5cJgApEzOe55t0SWK/EpRyYSVE7MBRqm58wtcctdCMDGS0w5RAW4dUZ7WmeEWkAA+JmnmWy70ekfn0BZTqv90boLnaxJ9Wl3RnwtNU+Y08yi8p8HHIm1cqgcmeNZJkXsEet9tGSj2PdTzz5i7Ag6Q/g6gZZWcVUb2Q1n26e3JMZIhrkld6wmBRPvWsutDQq5RdONDXKHCZQBJNwd9OfQRl62Zazw1nw60JfO6dkPtJxyIetHP9ey3VinEIATKVrH0wwiOA6PTzthv9M/G/fD6CSMwvAvKKsXUWMzrWyFxnEY0se2S03atYK2eRyjtfNcyvXX46K22hKcaS2RqzYUlDFl0E71F+QirWCcN7X1lCIJdn48/4mUUrSWL/BphedgagA/PYTxBU9YXSSsw4RacSkSllWV8CUIb0rtDtAYbWATznSvGLzA88VAYr4YtgD4nXz2fnmBZ4A7ZLIRb1ul5pQZvRIJPgLChG0w8pWFjgtpny+uQZII+sol86GyRjMA/rg0akHik62kcnLemTqwmsf+Po+3iuduqY34G5MWkRSbsFaoBRuMhuwev6hqXjn9/zg9faL/Ke3YXOfqtSC/SfLODjXWoXJoyL5Fs0LDGshf+fvG+PPBuaWmGSfT1k8HNLxG0HvA2VLre9tT56pXbE7+kuZRT2s1BeeGpqGlc5mNer21zk0n0SkXioaiHs/Env8jo5M8ph91fkAZ7Nqxji+EWnT/i72bSvawsajXkzrmcqmti07CMDxo4hJXKHWW0hjYmJlSnHFuhFv7QAeZ+BXXg5zguZu2l28ob6vcaws98sj9w+Z2sESeICVwfX/4szMYDTuVwA7R1anF5towOuHollCVTJcNVSzzhAZjn0V+Iq4s0x2CYGtGG9sF4pmK7HpzI3i7mXLraXx7dt6Mzl9/CCYg5toDVGfkeykF0im9h8Ev4/HIH9+XOs6JHx+/h6RSQpVkWihnuxM1UWOCg8RFhY+NJqqzfft7VKCVN7l1OmVNstOjVnnF1arjZoEkP1FHR2ywxcREvdPWbYyyulX9K2GemobZmrhmCK0IrCI5OmIX3CK7vf5togZStrbghlQkd2KFzOmIfXii/D5MaJKncq0A7XfDblj3Yh77XlwnIjl1k2eZNq5Fsa2ebLFcBiBFjMpiS/3dcAzBThnrDJXVuYmxq82iVyvZHslSHlDPSblqWakv7bsXz62kKDYHyQsv+XVBOvzsepnkQlEo3uWibnx30OQCVeg5YRe1rj3TAKiTkFxRzLjFWyPLkh5/ytFQo5gGsOJG8Bkl9l0BibD0PYFozqXdvXe3Q/nuuj7lvmcv+XPgYExN51HUVVZc5vQLAqAheOsvi3JaBk1LIncrgTeVU51xdTo2BvYObeq1lcYgjjFzT8pOW4fN6P0NZcus/m8i1QnpGE4B0bt3VnuQfF/1zwqQXC1yfxRDZZNe/wA6iEkP
+sidebar_class_name: "post api-method"
+info_path: docs/api/ollie-api
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Trigger N8N workflow"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"post"}
+  path={"/webhooks/n8n/{workflowId}"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Triggers an N8N workflow by its workflow ID
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+  children={"Request"}
+>
+</Heading>
+
+<ParamsDetails
+  parameters={[{"name":"workflowId","in":"path","required":true,"description":"The unique identifier of the N8N workflow","schema":{"type":"string","example":"workflow-123"}}]}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  title={"Body"}
+  body={{"required":true,"description":"Payload to send to the N8N workflow","content":{"application/json":{"schema":{"type":"object","properties":{"event":{"type":"string","description":"Event type that triggered the workflow","example":"user.created"},"data":{"type":"object","description":"Event data","example":{"userId":"user-456","email":"user@example.com","timestamp":"2024-01-15T10:30:00Z"}}}}}}}}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  id={undefined}
+  label={undefined}
+  responses={{"200":{"description":"Workflow triggered successfully","content":{"application/json":{"schema":{"type":"object","properties":{"success":{"type":"boolean","example":true},"workflowId":{"type":"string","example":"workflow-123"},"executionId":{"type":"string","example":"exec-789"},"message":{"type":"string","example":"Workflow triggered successfully"}}}}}},"400":{"description":"Bad request - invalid payload","content":{"application/json":{"schema":{"type":"object","required":["error","message"],"properties":{"error":{"type":"string","description":"Error type","example":"ValidationError"},"message":{"type":"string","description":"Error message","example":"The provided payload is invalid"},"details":{"type":"object","description":"Additional error details","additionalProperties":true}},"title":"Error"}}}},"401":{"description":"Unauthorized - invalid or missing API key","content":{"application/json":{"schema":{"type":"object","required":["error","message"],"properties":{"error":{"type":"string","description":"Error type","example":"ValidationError"},"message":{"type":"string","description":"Error message","example":"The provided payload is invalid"},"details":{"type":"object","description":"Additional error details","additionalProperties":true}},"title":"Error"}}}},"404":{"description":"Workflow not found","content":{"application/json":{"schema":{"type":"object","required":["error","message"],"properties":{"error":{"type":"string","description":"Error type","example":"ValidationError"},"message":{"type":"string","description":"Error message","example":"The provided payload is invalid"},"details":{"type":"object","description":"Additional error details","additionalProperties":true}},"title":"Error"}}}},"500":{"description":"Internal server error","content":{"application/json":{"schema":{"type":"object","required":["error","message"],"properties":{"error":{"type":"string","description":"Error type","example":"ValidationError"},"message":{"type":"string","description":"Error message","example":"The provided payload is invalid"},"details":{"type":"object","description":"Additional error details","additionalProperties":true}},"title":"Error"}}}}}}
+>
+  
+</StatusCodes>
+
+
+      

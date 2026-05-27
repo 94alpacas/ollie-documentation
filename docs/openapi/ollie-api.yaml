@@ -1,129 +1,1995 @@
-# Ollie API OpenAPI Specification
-
 openapi: 3.0.3
 info:
   title: Ollie API
+  version: 0.1.0
   description: |
-    HTTP API Documentation for Ollie endpoints.
-    
-    This API includes:
-    - N8N workflow endpoints
-    
-    ## Authentication
-    Most endpoints require authentication. Include your API key in the request headers.
-    
-    ## Base URL
-    Unless otherwise stated, all endpoints are relative to: `https://alpaca009.app.n8n.cloud`
-    
-  version: 1.0.0
+    HTTP API for the Ollie mobile app, n8n workflows, and internal pipeline workers.
+
+    **Base path:** All routes are mounted under `/api` (see `servers`).
+
+    **Success responses** use a JSON envelope `{ "data": T, "meta": { "timestamp": "...", ... } }`.
+
+    **Error responses** use [RFC 7807 Problem Details](https://datatracker.ietf.org/doc/html/rfc7807)
+    (`application/problem+json`): `{ "type", "title", "status", "detail", ... }`.
+
+    **Auth:** App routes expect `Authorization: Bearer <Auth0 access token>`.
+    Internal routes use dedicated `X-Ollie-*` secrets (see security schemes).
+
+    Generated from route modules in `ollie-api/src/routes/`. Re-import after API changes.
   contact:
-    name: API Support
-    email: support@example.com
+    name: 94 Alpacas — Ollie
+  license:
+    name: Proprietary
+    url: https://94alpacas.com
 
 servers:
-  - url: https://alpaca009.app.n8n.cloud
-    description: Production server
+  - url: http://localhost:3000/api
+    description: Local development (`PORT` defaults to 3000)
+  - url: https://api.example.com/api
+    description: Production (replace host with deployed API URL)
 
 tags:
-  - name: N8N Workflows
-    description: Endpoints for N8N workflow webhooks
-  - name: Custom Webhooks
-    description: Custom webhook endpoints
   - name: Health
-    description: Health check and monitoring endpoints
-
-security:
-  - ApiKeyAuth: []
+  - name: Auth
+  - name: Settings
+  - name: Business
+  - name: Onboarding
+  - name: Today
+  - name: Channels
+  - name: Assets
+  - name: Internal — Account deletion
+  - name: Internal — Daily hooks & content
+  - name: Internal — Notifications
+  - name: Internal — Publish
+  - name: Internal — Publish resilience
+  - name: Internal — Dev tools
 
 paths:
-  /webhook/agent-interaction:
+  /health:
+    get:
+      tags: [Health]
+      summary: Liveness check
+      operationId: getHealth
+      security: []
+      responses:
+        '200':
+          description: Service is up
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelopeHealth'
+
+  /auth/register:
     post:
-      tags:
-        - N8N Workflows
-      summary: Main Interaction
-      description: Acts as the primary entry point for all agent interactions. This includes responses from user intercations or other events that may be multi-step with the exception of explicit Human-in-the-loop interactions.
-      operationId: agentInteraction
+      tags: [Auth]
+      summary: Register user and provision tenant (Business)
+      operationId: postAuthRegister
+      security:
+        - bearerToken: []
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessEmpty'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+
+  /auth/me:
+    get:
+      tags: [Auth]
+      summary: Current authenticated user and business
+      operationId: getAuthMe
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Tenant context
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        required: [uid, businessId]
+                        properties:
+                          uid:
+                            type: string
+                          businessId:
+                            type: string
+                          preferredDisplayName:
+                            type: string
+                            nullable: true
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /settings/business-profile:
+    get:
+      tags: [Settings]
+      summary: Get business profile (settings)
+      operationId: getSettingsBusinessProfile
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessJson'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    patch:
+      tags: [Settings]
+      summary: Update business profile (settings)
+      operationId: patchSettingsBusinessProfile
+      security:
+        - bearerAuth: []
       requestBody:
         required: true
-        description: Payload to send to the N8N workflow
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessJson'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /settings/notification-preferences:
+    get:
+      tags: [Settings]
+      summary: Get notification preferences
+      operationId: getNotificationPreferences
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessJson'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    patch:
+      tags: [Settings]
+      summary: Update notification preferences
+      operationId: patchNotificationPreferences
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessJson'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /settings/notification-app-open:
+    post:
+      tags: [Settings]
+      summary: Record app open for notification scheduling (token-only)
+      operationId: postNotificationAppOpen
+      security:
+        - bearerToken: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessJson'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /settings/notification-publish-prompt:
+    post:
+      tags: [Settings]
+      summary: Record publish-prompt notification interaction
+      operationId: postNotificationPublishPrompt
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessJson'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /settings/billing-counters:
+    get:
+      tags: [Settings]
+      summary: Billing usage counters
+      operationId: getBillingCounters
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessJson'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /settings/billing-dashboard:
+    get:
+      tags: [Settings]
+      summary: Billing dashboard payload
+      operationId: getBillingDashboard
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessJson'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /settings/payment-method/setup-sheet:
+    post:
+      tags: [Settings]
+      summary: Stripe PaymentSheet bootstrap (SetupIntent + ephemeral key)
+      operationId: postPaymentMethodSetupSheet
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessJson'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /settings/payment-method:
+    post:
+      tags: [Settings]
+      summary: Persist payment method after client confirms SetupIntent
+      operationId: postCapturePaymentMethod
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessJson'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /settings/feedback:
+    post:
+      tags: [Settings]
+      summary: Forward in-app feedback to configured webhook
+      operationId: postFeedback
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessJson'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /v1/business/account/deletion:
+    post:
+      tags: [Business]
+      summary: Request account deletion (user-initiated)
+      operationId: postBusinessAccountDeletion
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessJson'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /v1/business/history:
+    get:
+      tags: [Business]
+      summary: Publishing history
+      operationId: getPublishingHistory
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/LimitQuery'
+        - $ref: '#/components/parameters/CursorQuery'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessJson'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /v1/business/history/top:
+    get:
+      tags: [Business]
+      summary: Top publishing history entries
+      operationId: getPublishingHistoryTop
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessJson'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /v1/business/history/refresh:
+    get:
+      tags: [Business]
+      summary: Refresh publishing history from platforms (rate-limited)
+      operationId: getPublishingHistoryRefresh
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessJson'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+
+  /onboarding/scan:
+    post:
+      tags: [Onboarding]
+      summary: Start website scan for onboarding
+      operationId: postOnboardingScan
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
         content:
           application/json:
             schema:
               type: object
               properties:
-                email: 
+                url:
                   type: string
-                  description: Email address of the user
-                  example: user@example.com
-                content:
-                  type: string
-                  description: The user message
-                  example:
-                    "Do you recommend any posts for the upcoming holiday season?"
-                platform_id:
-                  type: string
-                  description: The platform ID
-                  example: 1234567890
-                platform:
-                  type: string
-                  description: The platform type
-                  example: instagram
-                auth0_id:
-                  type: string
-                  description: The Auth0 ID of the user
-                  example: auth0|1234567890
-                session_id:
-                  type: string
-                  description: The session ID. If not provided, the response will contain a session ID that should be referenced in subsequent calls for this conversation.
-                  example: c94ef4b8-1163-4c53-bb19-9e4ed1e16820
+                  format: uri
       responses:
         '200':
-          description: Workflow triggered successfully
+          $ref: '#/components/responses/SuccessJson'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /onboarding/scan-status:
+    get:
+      tags: [Onboarding]
+      summary: Poll scan job status (token-only, pre-registration)
+      operationId: getOnboardingScanStatus
+      security:
+        - bearerToken: []
+      parameters:
+        - name: jobId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessJson'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /onboarding/guided-answers:
+    post:
+      tags: [Onboarding]
+      summary: Submit guided onboarding answers
+      operationId: postOnboardingGuidedAnswers
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessJson'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /onboarding/business-profile:
+    patch:
+      tags: [Onboarding]
+      summary: Update business profile during onboarding
+      operationId: patchOnboardingBusinessProfile
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessJson'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /onboarding/mirror-moment:
+    get:
+      tags: [Onboarding]
+      summary: Get mirror moment summary
+      operationId: getMirrorMoment
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessJson'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /onboarding/mirror-moment/corrections:
+    patch:
+      tags: [Onboarding]
+      summary: Apply mirror moment corrections
+      operationId: patchMirrorMomentCorrections
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessJson'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /onboarding/goals:
+    post:
+      tags: [Onboarding]
+      summary: Set onboarding goals
+      operationId: postOnboardingGoals
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessJson'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /onboarding/preferences:
+    patch:
+      tags: [Onboarding]
+      summary: Update onboarding preferences
+      operationId: patchOnboardingPreferences
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessJson'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /onboarding/daily-hook/trigger-generation:
+    post:
+      tags: [Onboarding]
+      summary: Trigger daily hook generation after mirror moment review
+      operationId: postOnboardingTriggerDailyHook
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessJson'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /onboarding/daily-hook/schedule-recurring:
+    post:
+      tags: [Onboarding]
+      summary: Schedule recurring daily hook generation
+      operationId: postOnboardingScheduleDailyHook
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessJson'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /onboarding/scan-result:
+    post:
+      tags: [Onboarding]
+      summary: n8n callback with website scan results
+      operationId: postOnboardingScanResult
+      security:
+        - n8nSecret: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessJson'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /today/hook:
+    get:
+      tags: [Today]
+      summary: Today's primary hook card and alternatives
+      operationId: getTodayHook
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Hook deck or empty state (`data` may be null)
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  message:
-                    type: string
-                    example: Workflow triggered successfully
-                  session_id:
-                    type: string
-                    description: The session ID. If provided in request, should be returned in response, otherwise a new session ID will be generated.
-                    example: c94ef4b8-1163-4c53-bb19-9e4ed1e16820
-        '500':
-          description: Internal server error
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        nullable: true
+                        description: Primary hook card and alternatives; null when `meta.emptyState` is true
+                        allOf:
+                          - $ref: '#/components/schemas/TodayHookCard'
+                      meta:
+                        type: object
+                        properties:
+                          calendarDay:
+                            type: string
+                            pattern: '^\d{4}-\d{2}-\d{2}$'
+                          emptyState:
+                            type: boolean
+                          hookPayloadSource:
+                            type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /today/hook/materialize:
+    post:
+      tags: [Today]
+      summary: Materialize today's hook deck for the tenant
+      operationId: postTodayHookMaterialize
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                force:
+                  type: boolean
+                  description: Requires ALLOW_FORCE_DAILY_HOOK_REGENERATION on the API
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessJson'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /today/hooks/{hookId}/generate-drafts:
+    post:
+      tags: [Today]
+      summary: Generate content drafts for an approved hook
+      operationId: postTodayGenerateDrafts
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/HookId'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessJson'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /today/drafts/{draftId}:
+    patch:
+      tags: [Today]
+      summary: Save master draft body text
+      operationId: patchTodayDraft
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/DraftId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [bodyText]
+              properties:
+                bodyText:
+                  type: string
+                baseUpdatedAt:
+                  type: string
+                  format: date-time
+                  description: Optional optimistic concurrency token
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessJson'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /today/drafts/{draftId}/channel-versions:
+    get:
+      tags: [Today]
+      summary: List channel versions for a draft
+      operationId: getTodayDraftChannelVersions
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/DraftId'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessJson'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /today/drafts/{draftId}/channel-versions/{channelVersionId}:
+    patch:
+      tags: [Today]
+      summary: Save per-channel adapted text
+      operationId: patchTodayChannelVersion
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/DraftId'
+        - $ref: '#/components/parameters/ChannelVersionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [adaptedText]
+              properties:
+                adaptedText:
+                  type: string
+                baseUpdatedAt:
+                  type: string
+                  format: date-time
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessJson'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /today/drafts/{draftId}/publish-media-status:
+    get:
+      tags: [Today]
+      summary: Draft media signals for publish UX
+      operationId: getTodayDraftPublishMediaStatus
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/DraftId'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessJson'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /today/media-library:
+    get:
+      tags: [Today]
+      summary: Tenant media library assets
+      operationId: getTodayMediaLibrary
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessJson'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /today/drafts/{draftId}/assets/{assetId}/link:
+    post:
+      tags: [Today]
+      summary: Link library asset to draft
+      operationId: postTodayLinkDraftAsset
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/DraftId'
+        - $ref: '#/components/parameters/AssetId'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessJson'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /today/hook/disposition:
+    post:
+      tags: [Today]
+      summary: Approve or skip today's hook
+      operationId: postTodayHookDisposition
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [hookId, action]
+              properties:
+                hookId:
+                  type: string
+                action:
+                  type: string
+                  enum: [approve, skip]
+                reason:
+                  type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessJson'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /today/prefetch-cascade:
+    get:
+      tags: [Today]
+      summary: Prefetch hook, channel previews, and drafts in one request
+      operationId: getTodayPrefetchCascade
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessJson'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /today/drafts/{draftId}/photo-upload-url:
+    post:
+      tags: [Today]
+      summary: Presigned S3 upload URL for draft-level photo
+      operationId: postTodayDraftPhotoUploadUrl
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/DraftId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [mimeType]
+              properties:
+                mimeType:
+                  type: string
+                  description: image/jpeg, image/png, image/webp, or image/gif
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessJson'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /today/drafts/{draftId}/photo-attach:
+    post:
+      tags: [Today]
+      summary: Confirm draft photo after S3 upload
+      operationId: postTodayDraftPhotoAttach
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/DraftId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [photoUrl, photoKey]
+              properties:
+                photoUrl:
+                  type: string
+                photoKey:
+                  type: string
+                mimeType:
+                  type: string
+                diagnosticUploadAttemptId:
+                  type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessJson'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /today/drafts/{draftId}/photo-upload-client-log:
+    post:
+      tags: [Today]
+      summary: Client diagnostic log for failed photo upload phases
+      operationId: postTodayDraftPhotoUploadClientLog
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/DraftId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [phase]
+              properties:
+                phase:
+                  type: string
+                  enum: [read_local_blob, s3_put]
+                detail:
+                  type: string
+                httpStatus:
+                  type: integer
+                mimeType:
+                  type: string
+                diagnosticUploadAttemptId:
+                  type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessJson'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /today/drafts/{draftId}/media:
+    delete:
+      tags: [Today]
+      summary: Clear draft-level media
+      operationId: deleteTodayDraftMedia
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/DraftId'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessJson'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /today/drafts/{draftId}/channel-versions/{channelVersionId}/photo-upload-url:
+    post:
+      tags: [Today]
+      summary: Presigned upload URL for per-channel photo
+      operationId: postTodayChannelVersionPhotoUploadUrl
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/DraftId'
+        - $ref: '#/components/parameters/ChannelVersionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [mimeType]
+              properties:
+                mimeType:
+                  type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessJson'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /today/drafts/{draftId}/channel-versions/{channelVersionId}/photo-attach:
+    post:
+      tags: [Today]
+      summary: Confirm per-channel photo after S3 upload
+      operationId: postTodayChannelVersionPhotoAttach
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/DraftId'
+        - $ref: '#/components/parameters/ChannelVersionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [photoUrl, photoKey]
+              properties:
+                photoUrl:
+                  type: string
+                photoKey:
+                  type: string
+                mimeType:
+                  type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessJson'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /today/drafts/{draftId}/channel-versions/{channelVersionId}/assets/{assetId}/link:
+    post:
+      tags: [Today]
+      summary: Link library asset to channel version
+      operationId: postTodayLinkChannelVersionAsset
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/DraftId'
+        - $ref: '#/components/parameters/ChannelVersionId'
+        - $ref: '#/components/parameters/AssetId'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessJson'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /today/drafts/{draftId}/channel-versions/{channelVersionId}/media:
+    delete:
+      tags: [Today]
+      summary: Clear per-channel media
+      operationId: deleteTodayChannelVersionMedia
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/DraftId'
+        - $ref: '#/components/parameters/ChannelVersionId'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessJson'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /today/drafts/{draftId}/channel-versions/{channelVersionId}/use-shared-draft-media:
+    post:
+      tags: [Today]
+      summary: Use shared draft media for this channel version
+      operationId: postTodayUseSharedDraftMedia
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/DraftId'
+        - $ref: '#/components/parameters/ChannelVersionId'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessJson'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /today/channels:
+    get:
+      tags: [Today]
+      summary: Stub channel list for Today (MVP)
+      operationId: getTodayChannels
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessJson'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /today/publish:
+    post:
+      tags: [Today]
+      summary: Publish draft to selected channels (in-process executor)
+      description: |
+        Returns **202 Accepted** when a new publish is enqueued. Supports `Idempotency-Key` header
+        for deduplication. User-scheduled publishes via EventBridge/n8n do not use this route.
+      operationId: postTodayPublish
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: false
+          schema:
+            type: string
+          description: Optional deduplication key for rapid replays
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TodayPublishRequest'
+      responses:
+        '202':
+          $ref: '#/components/responses/SuccessJson'
+        '200':
+          description: Idempotent replay of an existing publish record
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'  
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /channels:
+    get:
+      tags: [Channels]
+      summary: List connected channels
+      operationId: getChannels
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessJson'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /channels/oauth/initiate:
+    get:
+      tags: [Channels]
+      summary: Start OAuth flow (GET)
+      operationId: getChannelsOAuthInitiate
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: platform
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessJson'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      tags: [Channels]
+      summary: Start OAuth flow (POST)
+      operationId: postChannelsOAuthInitiate
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessJson'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /channels/oauth/callback:
+    get:
+      tags: [Channels]
+      summary: OAuth provider callback (browser redirect)
+      operationId: getChannelsOAuthCallback
+      security: []
+      parameters:
+        - name: code
+          in: query
+          schema:
+            type: string
+        - name: state
+          in: query
+          schema:
+            type: string
+        - name: error
+          in: query
+          schema:
+            type: string
+      responses:
+        '302':
+          description: Redirect to app deep link or error page
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /channels/oauth/connection-logs:
+    get:
+      tags: [Channels]
+      summary: List OAuth connection diagnostic logs
+      operationId: getChannelsOAuthConnectionLogs
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessJson'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /channels/oauth/diagnostic-logs:
+    delete:
+      tags: [Channels]
+      summary: Delete OAuth diagnostic log entries
+      operationId: deleteChannelsOAuthDiagnosticLogs
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessJson'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /channels/oauth/channel-post-client-event:
+    post:
+      tags: [Channels]
+      summary: Client telemetry for channel post flows
+      operationId: postChannelsOAuthClientEvent
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessJson'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /channels/{channelId}/pinterest/boards:
+    get:
+      tags: [Channels]
+      summary: List Pinterest boards for a channel
+      operationId: getChannelPinterestBoards
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ChannelId'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessJson'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /channels/{channelId}/publish-target:
+    patch:
+      tags: [Channels]
+      summary: Update channel publish target (e.g. Pinterest board)
+      operationId: patchChannelPublishTarget
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ChannelId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessJson'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /channels/{channelId}:
+    delete:
+      tags: [Channels]
+      summary: Disconnect a channel
+      operationId: deleteChannel
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ChannelId'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessJson'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /asset/{encodedKey}:
+    get:
+      tags: [Assets]
+      summary: Stream or redirect to tenant media asset
+      description: |
+        Default streams the object from S3. Use `?redirect=1` or `?redirect=true` for a 302 to a presigned URL.
+        Supports HTTP Range requests for streaming.
+      operationId: getAssetProxy
+      security: []
+      parameters:
+        - name: encodedKey
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Base64url-encoded S3 storage key
+        - name: redirect
+          in: query
+          schema:
+            type: string
+            enum: ['1', 'true']
+      responses:
+        '200':
+          description: Binary asset body (streamed)
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '302':
+          description: Redirect to presigned S3 URL
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '502':
+          $ref: '#/components/responses/BadGateway'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+
+  /v1/internal/account-deletion/run-due:
+    post:
+      tags: [Internal — Account deletion]
+      summary: Run due permanent account deletions
+      operationId: postInternalAccountDeletionRunDue
+      security:
+        - accountPipelineSecret: []
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessJson'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /v1/internal/account-deletion/purge:
+    post:
+      tags: [Internal — Account deletion]
+      summary: Hard-delete business graph (support / ops)
+      operationId: postInternalAccountDeletionPurge
+      security:
+        - accountPipelineSecret: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Exactly one of ownerId, businessId, or businessName
+              properties:
+                ownerId:
+                  type: string
+                businessId:
+                  type: string
+                businessName:
+                  type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessJson'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /v1/internal/account-deletion/cancel:
+    post:
+      tags: [Internal — Account deletion]
+      summary: Cancel pending deletion (support)
+      operationId: postInternalAccountDeletionCancel
+      security:
+        - accountPipelineSecret: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [businessId]
+              properties:
+                businessId:
+                  type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessJson'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /v1/internal/daily-hook-selection/materialize:
+    post:
+      tags: [Internal — Daily hooks & content]
+      summary: Materialize daily hooks for one business
+      operationId: postInternalDailyHookMaterialize
+      security:
+        - dailyHookPipelineSecret: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [businessId]
+              properties:
+                businessId:
+                  type: string
+                calendarDay:
+                  type: string
+                  pattern: '^\d{4}-\d{2}-\d{2}$'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessJson'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /v1/internal/daily-hook-selection/materialize-batch:
+    post:
+      tags: [Internal — Daily hooks & content]
+      summary: Batch materialize daily hooks
+      operationId: postInternalDailyHookMaterializeBatch
+      security:
+        - dailyHookPipelineSecret: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [businessIds]
+              properties:
+                businessIds:
+                  type: array
+                  minItems: 1
+                  items:
+                    type: string
+                calendarDay:
+                  type: string
+                  pattern: '^\d{4}-\d{2}-\d{2}$'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessJson'
+
+  /v1/internal/daily-hook-generation/context:
+    post:
+      tags: [Internal — Daily hooks & content]
+      summary: Read-only context for n8n LLM daily-hook workflow
+      operationId: postInternalDailyHookGenerationContext
+      security:
+        - dailyHookPipelineSecret: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [businessId]
+              properties:
+                businessId:
+                  type: string
+                calendarDay:
+                  type: string
+                  pattern: '^\d{4}-\d{2}-\d{2}$'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessJson'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /v1/internal/daily-hook-selection/materialize-llm:
+    post:
+      tags: [Internal — Daily hooks & content]
+      summary: Materialize hooks from LLM-written copy
+      operationId: postInternalDailyHookMaterializeLlm
+      security:
+        - dailyHookPipelineSecret: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [businessId, primary]
+              properties:
+                businessId:
+                  type: string
+                calendarDay:
+                  type: string
+                primary:
+                  $ref: '#/components/schemas/LlmHookSlot'
+                alternatives:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/LlmHookSlot'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessJson'
+
+  /v1/internal/content-generation/generate:
+    post:
+      tags: [Internal — Daily hooks & content]
+      summary: Trigger content draft generation for an approved hook
+      operationId: postInternalContentGenerationGenerate
+      security:
+        - dailyHookPipelineSecret: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [businessId, hookId]
+              properties:
+                businessId:
+                  type: string
+                hookId:
+                  type: string
+                calendarDay:
+                  type: string
+                  pattern: '^\d{4}-\d{2}-\d{2}$'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessJson'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /v1/internal/editorial/anti-marketing-blocklist:
+    get:
+      tags: [Internal — Daily hooks & content]
+      summary: Anti-marketing blocklist for n8n LLM prompts
+      operationId: getInternalAntiMarketingBlocklist
+      security:
+        - dailyHookPipelineSecret: []
+      responses:
+        '200':
+          description: Blocklist document in success envelope
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+
+  /v1/internal/notification-dispatch/run:
+    post:
+      tags: [Internal — Notifications]
+      summary: Run push notification dispatch window
+      operationId: postInternalNotificationDispatchRun
+      security:
+        - notificationDispatchSecret: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                correlationId:
+                  type: string
+                windowStartUtcMinutes:
+                  type: integer
+                  minimum: 0
+                  maximum: 1440
+                windowEndUtcMinutes:
+                  type: integer
+                  minimum: 0
+                  maximum: 1440
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessJson'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /v1/internal/publish-orchestration/complete:
+    post:
+      tags: [Internal — Publish]
+      summary: Finalize publish record after n8n orchestration
+      operationId: postInternalPublishOrchestrationComplete
+      security:
+        - dailyHookPipelineSecret: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [businessId, publishRecordId, contentId, channelIds]
+              properties:
+                businessId:
+                  type: string
+                publishRecordId:
+                  type: string
+                contentId:
+                  type: string
+                channelIds:
+                  type: array
+                  minItems: 1
+                  items:
+                    type: string
+                channelOptOuts:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessJson'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /v1/internal/publish-resilience/circuit:
+    get:
+      tags: [Internal — Publish resilience]
+      summary: Read publish circuit breaker state
+      operationId: getInternalPublishCircuit
+      security:
+        - dailyHookPipelineSecret: []
+      parameters:
+        - name: platformType
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessJson'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      tags: [Internal — Publish resilience]
+      summary: Trip or close publish circuit
+      operationId: postInternalPublishCircuit
+      security:
+        - dailyHookPipelineSecret: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [platformType, action]
+              properties:
+                platformType:
+                  type: string
+                action:
+                  type: string
+                  enum: [trip, close]
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessJson'
+
+  /v1/internal/publish-resilience/health-tick:
+    post:
+      tags: [Internal — Publish resilience]
+      summary: Record publish health tick
+      operationId: postInternalPublishHealthTick
+      security:
+        - dailyHookPipelineSecret: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                platformTypes:
+                  type: array
+                  items:
+                    type: string
+                closeOpenCircuits:
+                  type: boolean
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessJson'
+
+  /v1/internal/publish-resilience/queue/enqueue:
+    post:
+      tags: [Internal — Publish resilience]
+      summary: Enqueue publish queue item
+      operationId: postInternalPublishQueueEnqueue
+      security:
+        - dailyHookPipelineSecret: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessJson'
+
+  /v1/internal/publish-resilience/queue/drain-next:
+    post:
+      tags: [Internal — Publish resilience]
+      summary: Drain next publish queue item
+      operationId: postInternalPublishQueueDrainNext
+      security:
+        - dailyHookPipelineSecret: []
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessJson'
+
+  /v1/internal/publish-resilience/queue/complete:
+    post:
+      tags: [Internal — Publish resilience]
+      summary: Mark publish queue item complete
+      operationId: postInternalPublishQueueComplete
+      security:
+        - dailyHookPipelineSecret: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessJson'
+
+  /v1/internal/publish-resilience/channel-outcome:
+    post:
+      tags: [Internal — Publish resilience]
+      summary: Record per-channel publish outcome
+      operationId: postInternalPublishChannelOutcome
+      security:
+        - dailyHookPipelineSecret: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessJson'
+
+  /v1/internal/dev/token/decrypt:
+    post:
+      tags: [Internal — Dev tools]
+      summary: Decrypt stored channel token (dev only)
+      description: |
+        Mounted only when `OLLIE_DEV_TOKEN_DECRYPT_SECRET` is set at API startup.
+      operationId: postInternalDevTokenDecrypt
+      security:
+        - devTokenDecryptSecret: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Provide one of the ciphertext field names
+              properties:
+                accessTokenEncrypted:
+                  type: string
+                refreshTokenEncrypted:
+                  type: string
+                ciphertext:
+                  type: string
+                encrypted:
+                  type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessJson'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: Route not mounted (secret not configured)
+
 components:
   securitySchemes:
-    ApiKeyAuth:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Auth0 access token; requires registered tenant (`requireAuth`).
+    bearerToken:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Auth0 access token; valid JWT only (`requireToken`, e.g. pre-registration).
+    n8nSecret:
       type: apiKey
       in: header
-      name: X-API-Key
-      description: API key for authentication. Include this in the header of your requests.
+      name: x-n8n-secret
+      description: Must match `N8N_CALLBACK_SECRET`.
+    dailyHookPipelineSecret:
+      type: apiKey
+      in: header
+      name: X-Ollie-Daily-Hook-Pipeline-Secret
+      description: Must match `OLLIE_DAILY_HOOK_PIPELINE_SECRET`.
+    accountPipelineSecret:
+      type: apiKey
+      in: header
+      name: X-Ollie-Account-Pipeline-Secret
+      description: Must match `OLLIE_ACCOUNT_PIPELINE_SECRET`.
+    notificationDispatchSecret:
+      type: apiKey
+      in: header
+      name: X-Ollie-Notification-Dispatch-Secret
+      description: Must match `OLLIE_NOTIFICATION_DISPATCH_SECRET` (falls back to daily hook secret in dev).
+    devTokenDecryptSecret:
+      type: apiKey
+      in: header
+      name: X-Ollie-Dev-Token-Decrypt-Secret
+      description: Must match `OLLIE_DEV_TOKEN_DECRYPT_SECRET`.
+
+  parameters:
+    HookId:
+      name: hookId
+      in: path
+      required: true
+      schema:
+        type: string
+    DraftId:
+      name: draftId
+      in: path
+      required: true
+      schema:
+        type: string
+    ChannelVersionId:
+      name: channelVersionId
+      in: path
+      required: true
+      schema:
+        type: string
+    AssetId:
+      name: assetId
+      in: path
+      required: true
+      schema:
+        type: string
+    ChannelId:
+      name: channelId
+      in: path
+      required: true
+      schema:
+        type: string
+    LimitQuery:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+    CursorQuery:
+      name: cursor
+      in: query
+      schema:
+        type: string
 
   schemas:
-    Error:
+    SuccessEnvelope:
       type: object
-      required:
-        - error
-        - message
+      required: [data, meta]
       properties:
-        error:
-          type: string
-          description: Error type
-          example: ValidationError
-        message:
-          type: string
-          description: Error message
-          example: The provided payload is invalid
-        details:
+        data: {}
+        meta:
           type: object
-          description: Additional error details
+          required: [timestamp]
+          properties:
+            timestamp:
+              type: string
+              format: date-time
           additionalProperties: true
+
+    SuccessEnvelopeHealth:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                status:
+                  type: string
+                  example: ok
+
+    ProblemDetail:
+      type: object
+      required: [type, title, status, detail]
+      properties:
+        type:
+          type: string
+          example: about:blank
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        instance:
+          type: string
+      additionalProperties: true
+
+    TodayHookCard:
+      type: object
+      required: [id, templateId, headline, reasoning, category, alternatives]
+      properties:
+        id:
+          type: string
+        templateId:
+          type: string
+        headline:
+          type: string
+        reasoning:
+          type: string
+        category:
+          type: string
+        photoUrl:
+          type: string
+          format: uri
+        alternatives:
+          type: array
+          items:
+            type: object
+            required: [id, templateId, headline, reasoning, category]
+            properties:
+              id:
+                type: string
+              templateId:
+                type: string
+              headline:
+                type: string
+              reasoning:
+                type: string
+              category:
+                type: string
+              photoUrl:
+                type: string
+                format: uri
+
+    TodayPublishRequest:
+      type: object
+      required: [contentId, channelIds]
+      properties:
+        contentId:
+          type: string
+          description: Content draft id
+        channelIds:
+          type: array
+          minItems: 1
+          items:
+            type: string
+        channelOptOuts:
+          type: array
+          items:
+            type: string
+        businessId:
+          type: string
+          description: Must match authenticated tenant if provided
+        publishTraceId:
+          type: string
+        clientSource:
+          type: string
+          enum: [today, draft]
+
+    LlmHookSlot:
+      type: object
+      required: [templateId, hookCategory, headline, reasoning]
+      properties:
+        templateId:
+          type: string
+        hookCategory:
+          type: string
+        headline:
+          type: string
+        reasoning:
+          type: string
+
+  responses:
+    SuccessJson:
+      description: Success envelope with route-specific `data`
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SuccessEnvelope'
+    SuccessEmpty:
+      description: Success with minimal or empty data
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SuccessEnvelope'
+    BadRequest:
+      description: Bad request
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetail'
+    Unauthorized:
+      description: Missing or invalid credentials
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetail'
+    Forbidden:
+      description: Forbidden
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetail'
+    NotFound:
+      description: Resource not found
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetail'
+    Conflict:
+      description: Conflict (stale state or business rule)
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetail'
+    ValidationError:
+      description: Validation failed (often includes `fields` extension)
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetail'
+    RateLimited:
+      description: Rate limit exceeded
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetail'
+    BadGateway:
+      description: Upstream failure
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetail'
+    ServiceUnavailable:
+      description: Service unavailable
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetail'
